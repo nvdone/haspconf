@@ -1,5 +1,5 @@
 //NVD Sentinel license manager configuration utility
-//Copyright © 2019, Nikolay Dudkin
+//Copyright © 2019-2022, Nikolay Dudkin
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 #define RT_MANIFEST 24
 
 IDR_VERSION VERSIONINFO
-FILEVERSION 1,0,0,0
-PRODUCTVERSION 1,0,0,0
+FILEVERSION 1,1,0,0
+PRODUCTVERSION 1,1,0,0
 FILEOS 0x00000004
 FILETYPE 0x00000000
 BEGIN
@@ -26,13 +26,13 @@ BEGIN
 	BEGIN
 		BLOCK "FFFF0000"
 			BEGIN
-				VALUE "FileVersion", "1.0.0.0\0"
-				VALUE "ProductVersion", "1.0.0.0\0"
+				VALUE "FileVersion", "1.1.0.0\0"
+				VALUE "ProductVersion", "1.1.0.0\0"
 				VALUE "CompanyName", "Nikolay Dudkin\0"
 				VALUE "FileDescription", "HaspConf\0"
 				VALUE "InternalName", "HaspConf.exe\0"
-				VALUE "LegalCopyright", "(c) 2019, Nikolay Dudkin\0"
-				VALUE "LegalTrademarks", "(c) 2019, Nikolay Dudkin\0"
+				VALUE "LegalCopyright", "(c) 2019-2022, Nikolay Dudkin\0"
+				VALUE "LegalTrademarks", "(c) 2019-2022, Nikolay Dudkin\0"
 				VALUE "OriginalFilename", "HaspConf.exe\0"
 				VALUE "ProductName", "HaspConf\0"
 			END

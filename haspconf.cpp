@@ -1,5 +1,5 @@
 //NVD Sentinel license manager configuration utility
-//Copyright © 2019, Nikolay Dudkin
+//Copyright © 2019-2022, Nikolay Dudkin
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 
 CmdLine *cl = NULL;
 
-char *tmplt = "[SERVER]\r\nname = %s\r\nidle_session_timeout_mins = 720\r\npagerefresh = 3\r\nlinesperpage = 20\r\nACCremote = 0\r\nenablehaspc2v = 0\r\nold_files_delete_days = 90\r\n\r\nenabledetach = 0\r\nreservedseats = 0\r\nreservedpercent = 0\r\ndetachmaxdays = 14\r\ncommuter_delete_days = 7\r\ndisable_um = 0\r\n\r\nrequestlog = 0\r\nloglocal = 0\r\nlogremote = 0\r\nlogadmin = 0\r\nerrorlog = 0\r\nrotatelogs = 0\r\naccess_log_maxsize = 0 ;kB\r\nerror_log_maxsize = 0 ;kB\r\nzip_logs_days = 0\r\ndelete_logs_days = 0\r\npidfile = 0\r\npassacc = 0\r\n\r\naccessfromremote = 1\r\naccesstoremote = 1\r\nbind_local_only = 0  ; 0=all adapters, 1=localhost only\r\n\r\nproxyconnect = 0  ; 0=disabled, 1=WPAD, 2=manual\r\nproxyhost = \r\nproxyport = 3128\r\n\r\n\r\n[UPDATE]\r\ndownload_url = sentinelcustomer.gemalto.com/Sentinel/LanguagePacks/\r\nupdate_host = www3.safenet-inc.com\r\nlanguage_url = /hasp/language_packs/end-user/\r\n\r\n\r\n[REMOTE]\r\nbroadcastsearch = %d\r\naggressive = %d\r\nserversearchinterval = 30\r\nserveraddr = %s\r\n\r\n\r\n[ACCESS]\r\n\r\n\r\n[USERS]\r\n\r\n\r\n[VENDORS]\r\n\r\n\r\n[EMS]\r\nemsurl = http://localhost:8080\r\nemsurl = http://127.0.0.1:8080\r\n\r\n\r\n[LOGPARAMETERS]\r\ntext = {timestamp} {clientaddr}:{clientport} {clientid} {method} {url} {function}({functionparams}) result({statuscode}){newline}\r\n\r\n\0\0\0\0";
+wchar_t *tmplt = L"[SERVER]\r\nname = %s\r\nidle_session_timeout_mins = 720\r\npagerefresh = 3\r\nlinesperpage = 20\r\nACCremote = 0\r\nenablehaspc2v = 0\r\nold_files_delete_days = 90\r\n\r\nenabledetach = 0\r\nreservedseats = 0\r\nreservedpercent = 0\r\ndetachmaxdays = 14\r\ncommuter_delete_days = 7\r\ndisable_um = 0\r\n\r\nrequestlog = 0\r\nloglocal = 0\r\nlogremote = 0\r\nlogadmin = 0\r\nerrorlog = 0\r\nrotatelogs = 0\r\naccess_log_maxsize = 0 ;kB\r\nerror_log_maxsize = 0 ;kB\r\nzip_logs_days = 0\r\ndelete_logs_days = 0\r\npidfile = 0\r\npassacc = 0\r\n\r\naccessfromremote = 1\r\naccesstoremote = 1\r\nbind_local_only = 0  ; 0=all adapters, 1=localhost only\r\n\r\nproxyconnect = 0  ; 0=disabled, 1=WPAD, 2=manual\r\nproxyhost = \r\nproxyport = 3128\r\n\r\n\r\n[UPDATE]\r\ndownload_url = sentinelcustomer.gemalto.com/Sentinel/LanguagePacks/\r\nupdate_host = www3.safenet-inc.com\r\nlanguage_url = /hasp/language_packs/end-user/\r\n\r\n\r\n[REMOTE]\r\nbroadcastsearch = %d\r\naggressive = %d\r\nserversearchinterval = 30\r\n%s\r\n\r\n\r\n[ACCESS]\r\n\r\n\r\n[USERS]\r\n\r\n\r\n[VENDORS]\r\n\r\n\r\n[EMS]\r\nemsurl = http://localhost:8080\r\nemsurl = http://127.0.0.1:8080\r\n\r\n\r\n[LOGPARAMETERS]\r\ntext = {timestamp} {clientaddr}:{clientport} {clientid} {method} {url} {function}({functionparams}) result({statuscode}){newline}\r\n\r\n\0";
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 LPFN_ISWOW64PROCESS fnIsWow64Process;
@@ -52,7 +52,6 @@ BOOL IsWow64()
 	BOOL bIsWow64 = FALSE;
 
 	fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process");
-
 	if(fnIsWow64Process != NULL)
 	{
 		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
@@ -72,12 +71,10 @@ void RestartService()
 	SERVICE_STATUS lpServiceStatus;
 
 	schSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-
 	if (!schSCManager) 
 		die(L"OpenSCManager", 10);
 
 	schService = OpenService(schSCManager, L"hasplms", SERVICE_ALL_ACCESS);
- 
 	if (!schService)
 	{
 		CloseServiceHandle(schSCManager);
@@ -118,7 +115,6 @@ void RestartService()
 			CloseServiceHandle(schService); 
 			CloseServiceHandle(schSCManager);
 			die(L"Timeout waiting for service to stop", 15);
-			return; 
 		}
 	}
 
@@ -135,86 +131,125 @@ void RestartService()
 
 int wmain()
 {
-	wprintf(L"HaspConf 1.0\r\n(c) 2019, Nikolay Dudkin\r\n\r\n");
-
 	cl = new CmdLine(GetCommandLine());
 
-	if(cl->HasParam(L"-?", 0) || cl->CountCommands() < 2)
+	wchar_t *servers = cl->GetOptionValue(L"-servers", 1, 1);
+
+	if(cl->HasParam(L"-?", 0) || !servers)
 	{
-		wprintf(L"Usage: %s [-?] server [-broadcast:0|1] [-aggressive:0|1]", cl->GetCommand(0)->GetName(0));
+		wprintf(L"HaspConf 1.1\r\n(c) 2019-2022, Nikolay Dudkin\r\n\r\nUsage: %s [-?] -servers:\"comma-separated list of server names\" [-broadcast:0|1] [-aggressive:0|1]", cl->GetCommand(0)->GetName(0));
+		delete cl;
 		return 0;
+	}
+
+	int serveraddrs_l = 1;
+	wchar_t *p1 = servers;
+	do
+	{
+		if(*p1 == L' ' || *p1 == L',')
+			serveraddrs_l++;
+	} while(*p1++);
+	serveraddrs_l = serveraddrs_l * wcslen(L"serveraddr = XX") + wcslen(servers) - serveraddrs_l + 2; //why do I only do this...
+
+	wchar_t *serveraddrs = new wchar_t[serveraddrs_l];
+	memset(serveraddrs, 0, sizeof(wchar_t) * serveraddrs_l);
+
+	wchar_t *delims = L" ,";
+	wchar_t *p2 = NULL;
+	p1 = wcstok(servers, delims, &p2); 
+
+	while(p1)
+	{ 
+		wcsncat(serveraddrs, L"serveraddr = ", max(serveraddrs_l - wcslen(serveraddrs) - 1, 0)); //missing _s functions...
+		wcsncat(serveraddrs, p1, max(serveraddrs_l - wcslen(serveraddrs) - 1, 0));
+		wcsncat(serveraddrs, L"\r\n", max(serveraddrs_l - wcslen(serveraddrs) - 1, 0));
+		p1 = wcstok(NULL, delims, &p2); 
 	}
 
 	int broadcast = 0;
 	int aggressive = 0;
 
-	if(cl->HasParam(L"-broadcast", 1) && !wcscmp(cl->GetOptionValue(L"-broadcast", 1, 1), L"1"))
-		broadcast = 1;
+	p1 = cl->GetOptionValue(L"-broadcast", 1, 1);
+	broadcast = p1 && !wcscmp(p1, L"1");
 
-	if(cl->HasParam(L"-aggressive", 1) && !wcscmp(cl->GetOptionValue(L"-aggressive", 1, 1), L"1"))
-		aggressive = 1;
+	p1 = cl->GetOptionValue(L"-aggressive", 1, 1);
+	aggressive = p1 && !wcscmp(p1, L"1");
 
-	wchar_t *wserver = cl->GetCommand(1)->GetName(1);
+	DWORD computername_l = 256;
+	wchar_t *computername = new wchar_t[computername_l];
+	memset(computername, 0, sizeof(wchar_t) * computername_l);
 
-	char *server = new char[wcslen(wserver) + 1];
-	memset(server, 0, wcslen(wserver) + 1);
-
-	if(!WideCharToMultiByte(CP_ACP, 0, wserver, wcslen(wserver), server, wcslen(wserver), NULL, NULL))
+	if(!GetComputerName(computername, &computername_l))
 	{
-		delete []server;
-		die(L"WideCharToMultiByte", 1);
+		if(GetLastError() == ERROR_BUFFER_OVERFLOW)
+		{
+			delete []computername;
+			computername = new wchar_t[computername_l];
+			memset(computername, 0, sizeof(wchar_t) * computername_l);
+
+			if(!GetComputerName(computername, &computername_l))
+			{
+				delete []computername;
+				delete []serveraddrs;
+				die(L"GetComputerName", 1);
+			}
+		}
+		else
+		{
+			delete []computername;
+			delete []serveraddrs;
+			die(L"GetComputerName", 2);
+		}
 	}
 
-	DWORD wcomputer_l = 1024;
-	wchar_t *wcomputer = new wchar_t[wcomputer_l + 1];
-	memset(wcomputer, 0, (wcomputer_l + 1) * sizeof(wchar_t));
+	int buf_l = wcslen(tmplt) + wcslen(serveraddrs) + computername_l - 5; //oops I did it again...
+	wchar_t *buf_w = new wchar_t[buf_l];
+	memset(buf_w, 0, sizeof(wchar_t) * buf_l);
 
-	if(!GetComputerName(wcomputer, &wcomputer_l))
+	if(swprintf(buf_w, buf_l, tmplt, computername, broadcast, aggressive, serveraddrs) < 0)
 	{
-		delete []server;
-		die(L"GetComputerName", 2);
+		delete []buf_w;
+		delete []computername;
+		delete []serveraddrs;
+		die(L"swprintf", 3);
 	}
 
-	char *computer = new char[wcslen(wcomputer) + 1];
-	memset(computer, 0, wcslen(wcomputer) + 1);
+	delete []computername;
+	delete []serveraddrs;
 
-	if(!WideCharToMultiByte(CP_ACP, 0, wcomputer, wcslen(wcomputer), computer, wcslen(wcomputer), NULL, NULL))
+	char *buf_c = new char[buf_l];
+	memset(buf_c, 0, sizeof(char) * buf_l);
+
+	if(!WideCharToMultiByte(CP_ACP, 0, buf_w, wcslen(buf_w), buf_c, wcslen(buf_w), NULL, NULL))
 	{
-		delete []computer;
-		delete []server;
-		die(L"WideCharToMultiByte", 3);
+		delete []buf_w;
+		delete []buf_c;
+		die(L"WideCharToMultiByte", 4);
 	}
 
-	delete []wcomputer;
-
-	char *buf = new char[strlen(tmplt) * 2];
-	memset(buf, 0, strlen(tmplt) * 2);
-
-	if(snprintf(buf, strlen(tmplt) * 2 - 1, tmplt, computer, broadcast, aggressive, server) < 0)
-	{
-		delete []computer;
-		delete []server;
-		die(L"snprintf", 4);
-	}
-
-	delete []computer;
-	delete []server;
+	delete []buf_w;
 
 	wchar_t *kf;
 
 	if(IsWow64())
 	{
 		if(SHGetKnownFolderPath(FOLDERID_ProgramFilesCommon, 0, 0, &kf) != S_OK)
+		{
+			delete []buf_c;
 			die(L"SHGetKnownFolderPath", 5);
+		}
 	}
 	else
 	{
 		if(SHGetKnownFolderPath(FOLDERID_ProgramFilesCommonX86, 0, 0, &kf) != S_OK)
+		{
+			delete []buf_c;
 			die(L"SHGetKnownFolderPath", 6);
+		}
 	}
 
 	wchar_t *path = new wchar_t[MAX_PATH + 1];
-	memset(path, 0, (MAX_PATH + 1) * sizeof(wchar_t));
+	memset(path, 0, sizeof(wchar_t) * (MAX_PATH + 1));
 
 	swprintf(path, MAX_PATH, L"%s\\Aladdin Shared", kf);
 	if(!PathFileExists(path))
@@ -229,29 +264,27 @@ int wmain()
 	CoTaskMemFree(kf);
 
 	FILE *file = _wfopen(path, L"wb");
-
 	if(!file)
 	{
-		delete []buf;
+		delete []buf_c;
 		delete []path;
 		die(L"_wfopen", 7);
 	}
 
-	if(fwrite(buf, 1, strlen(buf), file) < strlen(buf))
+	if(fwrite(buf_c, 1, strlen(buf_c), file) < strlen(buf_c))
 	{
-		delete []buf;
+		delete []buf_c;
 		delete []path;
 		die(L"fwrite", 8);
 	}
 
 	fclose(file);
 
-	delete []buf;
+	delete []buf_c;
 	delete []path;
 
 	RestartService();
 
 	delete cl;
-
 	return 0;
 }
